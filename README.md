@@ -1,16 +1,18 @@
 # FP32 Floating-Point Multiply-Accumulate (FP-MAC)
 
-A modular, sequential floating-point MAC designed in Verilog HDL, implementing a datapath for single-precision IEEE 754 arithmetic.
+A modular, sequential floating-point multiply-accumulate unit designed in Verilog HDL, implementing a datapath for single-precision IEEE 754 arithmetic.
 
 The design computes:
 
 $$
-acc \leftarrow \operatorname{round}(acc + a \times b)
+acc_{\mathrm{new}} = \mathrm{RN}(acc + a \times b)
 $$
 
-Rather than treating multiplication and addition as black-box operators, I built the datapath from separate arithmetic modules, including a shift-add multiplier, exponent alignment logic, extended-precision addition, and a normalization and rounding stage.
+where RN denotes round-to-nearest, ties-to-even.
 
-The project focuses on understanding and implementing floating-point arithmetic at the RTL level, with an emphasis on datapath organization, control sequencing, numerical corner cases, and physical implementation.
+Rather than treating multiplication and addition as black-box operators, I built the datapath using separate arithmetic modules, including an iterative shift-add multiplier, exponent alignment logic, extended-precision addition, and a normalization and rounding stage.
+
+The project focuses on floating-point arithmetic at the RTL level, with an emphasis on datapath organization, control sequencing, numerical corner cases, and physical implementation.
 
 ## Architecture
 
@@ -18,17 +20,19 @@ The project focuses on understanding and implementing floating-point arithmetic 
 
 The design is organized into five main stages.
 
-### 1. Operand decoding
+### 1. Operand Decoding
 
-`fp_decoder.v`
+**Module:** `fp_decoder.v`
 
 Each 32-bit operand is decoded into its sign, internal exponent, and significand. The decoder also identifies special values such as zero, infinity, and NaN.
 
 Subnormal inputs require additional handling because they do not have the implicit leading 1 used by normal floating-point numbers. The decoder normalizes their significands internally while adjusting their exponents.
 
-### 2. Sequential multiplication
+This representation allows the downstream arithmetic modules to operate on decoded operands rather than repeatedly extracting IEEE 754 fields.
 
-`fp_multiplier.v` and `shift_add_multiplier.v`
+### 2. Sequential Multiplication
+
+**Modules:** `fp_multiplier.v`, `shift_add_multiplier.v`
 
 The multiplier operates on two 24-bit significands, including the implicit leading bit for normal operands.
 
@@ -39,19 +43,19 @@ Instead of using a single combinational multiplication operator, the design uses
 - The multiplier is shifted right to expose the next bit.
 - A 48-bit accumulator retains the product.
 
-The multiplication takes 24 iterations. This approach makes the arithmetic operation explicit at the RTL level and trades execution latency for a simpler, iterative datapath.
+The multiplication takes 24 iterations. This makes the arithmetic operation explicit at the RTL level and trades execution latency for a simpler iterative datapath.
 
 The product sign and exponent are calculated separately from the significand multiplication.
 
-### 3. Exponent alignment and addition
+### 3. Exponent Alignment and Addition
 
-`fp_adder.v`
+**Module:** `fp_adder.v`
 
 The product must be aligned with the current accumulator value before addition or subtraction.
 
 The adder compares the operand exponents, shifts the operand with the smaller exponent, and preserves information about discarded bits using shift-right-with-jamming logic.
 
-The arithmetic stage then performs:
+The arithmetic stage performs:
 
 - Addition when both operands have the same sign.
 - Subtraction when their signs differ.
@@ -60,9 +64,9 @@ The arithmetic stage then performs:
 
 The aligned operands use a 51-bit internal representation, and the adder produces a 52-bit result.
 
-### 4. Normalization, rounding and packing
+### 4. Normalization, Rounding and Packing
 
-`fp_norm_pack.v`
+**Module:** `fp_norm_pack.v`
 
 The arithmetic result is converted back into a 32-bit floating-point representation.
 
@@ -78,9 +82,9 @@ This stage handles:
 
 Keeping normalization and rounding separate from the adder makes these operations easier to understand, verify, and modify independently.
 
-### 5. Accumulator and control
+### 5. Accumulator and Control
 
-`fp_MAC.v`
+**Module:** `fp_MAC.v`
 
 The top-level module coordinates the arithmetic stages using a finite-state machine.
 
@@ -100,11 +104,11 @@ The design also includes:
 
 This organization separates control sequencing from the arithmetic datapath.
 
-## Design decisions
+## Design Decisions
 
 These are some of the important implementation choices behind the design.
 
-### Iterative multiplication instead of a combinational multiplier
+### Iterative Multiplication Instead of a Combinational Multiplier
 
 The significand multiplier is implemented using shift-add arithmetic rather than relying on a single `*` operator.
 
@@ -112,7 +116,7 @@ This makes the multiplication process explicit and provides a useful basis for s
 
 The trade-off is a longer execution time compared with a sufficiently parallel multiplier.
 
-### Preserve the product before final rounding
+### Preserve the Product Before Final Rounding
 
 The multiplier retains the full 48-bit significand product instead of immediately reducing it to a 24-bit significand.
 
@@ -121,14 +125,14 @@ The product is then combined with the accumulator in an extended-precision repre
 The intended arithmetic behavior is:
 
 $$
-acc_{\text{new}} = \operatorname{RN}(acc + a \times b)
+acc_{\mathrm{new}} = \mathrm{RN}(acc + a \times b)
 $$
 
 where RN denotes round-to-nearest, ties-to-even.
 
 This avoids introducing a separate FP32 rounding step immediately after multiplication. Full IEEE 754 fused-operation equivalence still requires verification across rounding, subnormal, overflow, and special-value cases.
 
-### Explicit handling of floating-point corner cases
+### Explicit Handling of Floating-Point Corner Cases
 
 Floating-point arithmetic is not limited to ordinary positive and negative numbers.
 
@@ -136,7 +140,7 @@ The design includes special-case detection and handling for zero, infinity, NaN,
 
 It also handles cancellation during subtraction, where leading significand bits may become zero and additional normalization is required.
 
-### Extended precision and sticky-bit handling
+### Extended Precision and Sticky-Bit Handling
 
 Exponent alignment can discard low-order bits. Simply shifting an operand right would lose information that may affect the final rounded result.
 
@@ -144,7 +148,7 @@ The adder therefore uses shift-right-with-jamming logic to preserve whether any 
 
 The final rounding stage uses guard and sticky information, together with the least significant retained bit, to implement round-to-nearest, ties-to-even.
 
-## Functional verification
+## Functional Verification
 
 The design has been tested using a self-checking Verilog testbench.
 
@@ -167,15 +171,15 @@ The tested cases include:
 
 These results represent the tested cases only. They do not establish exhaustive correctness or complete IEEE 754 compliance.
 
-The testbench and its execution instructions will be maintained alongside the RTL so that the results can be reproduced.
+The testbench should be included in the repository so that the verification results can be reproduced.
 
-## Physical design
+## Physical Design
 
 The RTL has also been taken through a preliminary physical-design run.
 
 The current baseline is:
 
-| Parameter | Reported result |
+| Parameter | Reported Result |
 |---|---:|
 | Target clock period | 10 ns |
 | Target frequency | 100 MHz |
@@ -194,7 +198,7 @@ The current critical path was reported from `acc[12]` to `ADD0.a_aligned[26]`. T
 
 The physical-design results are preliminary. DRC and LVS cleanliness must be established separately and documented before claiming a fully verified layout.
 
-## Current limitations and next steps
+## Current Limitations and Next Steps
 
 The design is an ongoing hardware implementation project. The main areas for further work are:
 
@@ -208,7 +212,7 @@ The design is an ongoing hardware implementation project. The main areas for fur
 
 The current architecture prioritizes clarity of the arithmetic datapath and explicit control over minimum latency.
 
-## Repository structure
+## Repository Structure
 
 ```text
 fp-mac/
