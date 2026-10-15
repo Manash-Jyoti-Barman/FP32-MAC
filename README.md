@@ -257,25 +257,6 @@ DRC and LVS establish different properties:
 
 Neither result alone establishes timing closure, exhaustive functional correctness, or complete IEEE 754 compliance.
   
-## Repository Structure
-
-```text
-fp-mac/
-├── rtl/
-│   ├── fp_MAC.v
-│   ├── fp_decoder.v
-│   ├── fp_multiplier.v
-│   ├── shift_add_multiplier.v
-│   ├── fp_adder.v
-│   └── fp_norm_pack.v
-├── tb/
-│   └── tb_fp_mac.v
-├── images/
-│   └── fp_mac_architecture.png
-├── reports/
-│   └── physical_design_baseline.txt
-└── README.md
-```
 
 ## Tools
 
