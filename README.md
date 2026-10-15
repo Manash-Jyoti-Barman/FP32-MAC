@@ -286,7 +286,7 @@ fp-mac/
 - Klayout
 - Magic
 - Netgen
-- Sky130 / GF180 MCU PDKs, as applicable to individual runs
+- Sky130 PDK
 
 ## License
 
