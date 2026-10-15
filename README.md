@@ -256,19 +256,6 @@ DRC and LVS establish different properties:
 - **LVS** checks whether the extracted layout circuit matches the reference circuit.
 
 Neither result alone establishes timing closure, exhaustive functional correctness, or complete IEEE 754 compliance.
-
-## Current Limitations and Next Steps
-
-The project has progressed from RTL development to physical implementation and layout verification. The following areas remain for further improvement:
-
-- Complete and document a reproducible RTL-to-GDSII flow.
-- Verify setup timing at the slow process corner and hold timing at the fast process corner.
-- Investigate the critical timing paths and improve timing margin where necessary.
-- Reassess area and power using documented analysis settings.
-- Expand functional verification using independent reference calculations and additional corner cases.
-- Evaluate subnormal results, rounding boundaries, overflow, and exceptional operations against an IEEE 754 reference.
-- Document supported operations, rounding behavior, and exceptional-result handling more precisely.
-- Preserve the final physical-design reports and verification logs for reproducibility.
   
 ## Repository Structure
 
