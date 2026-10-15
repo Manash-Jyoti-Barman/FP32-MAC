@@ -223,6 +223,8 @@ The OpenROAD-flow-scripts DRC stage generated a final DRC count report containin
 
 This result indicates that the configured DRC checks reported no violations for the evaluated layout.
 
+![DRC Result](images/drc_result.png)
+
 #### Layout Versus Schematic (LVS)
 
 LVS was performed by extracting the circuit connectivity from the final GDS layout using Magic and comparing the extracted SPICE netlist against the reference Verilog netlist using Netgen.
@@ -230,6 +232,8 @@ LVS was performed by extracting the circuit connectivity from the final GDS layo
 The final Netgen report stated:
 
 `Final result: Circuits match uniquely.`
+
+![LVS Result](images/lvs_result.png)
 
 Both circuits contained 5,589 devices and 6,003 nets, and the reported cell pin lists were equivalent.
 
