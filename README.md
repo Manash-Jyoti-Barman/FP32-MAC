@@ -183,45 +183,83 @@ These results represent the tested cases only. They do not establish exhaustive 
 
 The testbench should be included in the repository so that the verification results can be reproduced.
 
-## Physical Design
+## Physical Design and Verification
 
-The RTL has also been taken through a preliminary physical-design run.
+The FP32 Floating-Point Multiply-Accumulate (FP-MAC) RTL has been taken through an ASIC physical-design flow using the **Sky130HD standard-cell library** and **OpenROAD-flow-scripts (ORFS)**.
 
-The current baseline is:
+The physical implementation and verification process includes:
+- RTL synthesis and standard-cell mapping.
+- Floorplanning and power-distribution network generation.
+- Global and detailed placement.
+- Clock-tree synthesis and routing.
+- Parasitic extraction and timing analysis.
+- Design Rule Checking (DRC).
+- Layout Versus Schematic (LVS) verification.
 
-| Parameter | Reported Result |
-|---|---:|
-| Target clock period | 10 ns |
-| Target frequency | 100 MHz |
-| Worst synchronous setup slack | +0.31 ns |
-| Reported design area | 244,691 µm² |
-| Reported utilization | 74% |
-| Reported estimated total power | 373 mW |
+### Physical Verification Results
 
-These values are from a specific implementation run and depend on its constraints, technology libraries, tool configuration, and analysis assumptions.
+The final routed layout was evaluated using the configured OpenROAD-flow-scripts DRC stage and a separate Magic and Netgen LVS workflow.
 
-The positive setup slack indicates that the reported run met its setup requirement, but the margin is small. Further timing optimization and repeatable physical-design analysis are needed before drawing stronger conclusions about performance.
+| Verification Metric | Result |
+|---|---|
+| Technology platform | Sky130HD |
+| Physical-design flow | OpenROAD-flow-scripts |
+| DRC violations reported | **0** |
+| LVS result | **Circuits match uniquely** |
+| Devices in layout comparison | 5,589 |
+| Devices in reference comparison | 5,589 |
+| Nets in layout comparison | 6,003 |
+| Nets in reference comparison | 6,003 |
 
-The reported power is an estimate and should not be treated as a technology-independent measurement.
+#### Design Rule Checking (DRC)
 
-The current critical path was reported from `acc[12]` to `ADD0.a_aligned[26]`. This provides a starting point for investigating the accumulator-to-adder path and the cost of exponent alignment.
+The OpenROAD-flow-scripts DRC stage generated a final DRC count report containing zero violations.
 
-The physical-design results are preliminary. DRC and LVS cleanliness must be established separately and documented before claiming a fully verified layout.
+This result indicates that the configured DRC checks reported no violations for the evaluated layout.
+
+#### Layout Versus Schematic (LVS)
+
+LVS was performed by extracting the circuit connectivity from the final GDS layout using Magic and comparing the extracted SPICE netlist against the reference Verilog netlist using Netgen.
+
+The final Netgen report stated:
+
+`Final result: Circuits match uniquely.`
+
+Both circuits contained 5,589 devices and 6,003 nets, and the reported cell pin lists were equivalent.
+
+This confirms a unique match for the two circuits under the configured extraction and LVS setup.
+
+### Timing Analysis
+
+Timing analysis is an important part of evaluating the physical implementation.
+
+The design uses a 10 ns target clock period (100 MHz). Post-route timing should be evaluated using the final timing constraints and extracted parasitics.
+
+Typical-corner timing results are useful for baseline evaluation, but they do not establish worst-case timing closure. Slow-corner setup timing and fast-corner hold timing must be checked separately using the appropriate timing libraries and analysis scenes.
+
+### Verification Scope
+
+The reported DRC and LVS results apply to the specific layout, reference netlist, extraction configuration, and verification rules used for these runs.
+
+DRC and LVS establish different properties:
+- **DRC** checks the layout against the configured physical design rules.
+- **LVS** checks whether the extracted layout circuit matches the reference circuit.
+
+Neither result alone establishes timing closure, exhaustive functional correctness, or complete IEEE 754 compliance.
 
 ## Current Limitations and Next Steps
 
-The design is an ongoing hardware implementation project. The main areas for further work are:
+The project has progressed from RTL development to physical implementation and layout verification. The following areas remain for further improvement:
 
-- Complete and document a reproducible LibreLane RTL-to-GDSII flow.
-- Run and review DRC and LVS.
-- Investigate the critical timing path and improve setup margin.
+- Complete and document a reproducible RTL-to-GDSII flow.
+- Verify setup timing at the slow process corner and hold timing at the fast process corner.
+- Investigate the critical timing paths and improve timing margin where necessary.
 - Reassess area and power using documented analysis settings.
-- Expand verification using independent reference calculations and additional corner cases.
-- Evaluate the numerical behavior of subnormal results, rounding boundaries, and exceptional operations against an IEEE 754 reference.
+- Expand functional verification using independent reference calculations and additional corner cases.
+- Evaluate subnormal results, rounding boundaries, overflow, and exceptional operations against an IEEE 754 reference.
 - Document supported operations, rounding behavior, and exceptional-result handling more precisely.
-
-The current architecture prioritizes clarity of the arithmetic datapath and explicit control over minimum latency.
-
+- Preserve the final physical-design reports and verification logs for reproducibility.
+  
 ## Repository Structure
 
 ```text
