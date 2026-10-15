@@ -196,6 +196,12 @@ The physical implementation and verification process includes:
 - Design Rule Checking (DRC).
 - Layout Versus Schematic (LVS) verification.
 
+### Final Physical Layout
+
+![FP-MAC Final Physical Layout](images/gui_final.png)
+
+*Final routed layout of the FP32 MAC design, viewed in the OpenROAD GUI.*
+
 ### Physical Verification Results
 
 The final routed layout was evaluated using the configured OpenROAD-flow-scripts DRC stage and a separate Magic and Netgen LVS workflow.
