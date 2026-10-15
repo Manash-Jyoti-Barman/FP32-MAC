@@ -282,8 +282,10 @@ fp-mac/
 - Verilog HDL
 - Icarus Verilog
 - GTKWave
-- LibreLane
 - OpenROAD
+- Klayout
+- Magic
+- Netgen
 - Sky130 / GF180 MCU PDKs, as applicable to individual runs
 
 ## License
